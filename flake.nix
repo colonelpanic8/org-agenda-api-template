@@ -8,40 +8,22 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Direct dependency on org-agenda-api for mkContainer
     org-agenda-api = {
       url = "github:colonelpanic8/org-agenda-api";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Dotfiles provides tangled org-config elisp files
-    dotfiles = {
-      url = "github:colonelpanic8/dotfiles?dir=nixos";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # For advanced dotfiles integration, see:
+    # https://github.com/colonelpanic8/colonelpanic-org-agenda-api
   };
 
-  outputs = { self, nixpkgs, flake-utils, agenix, dotfiles, org-agenda-api }:
+  outputs = { self, nixpkgs, flake-utils, agenix, org-agenda-api }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        # Get tangled config files from dotfiles
-        tangledConfig = dotfiles.packages.${system}.org-agenda-custom-config;
-
-        # Combine tangled config with our loader
-        orgAgendaCustomConfig = pkgs.runCommand "org-agenda-custom-config" {} ''
-          mkdir -p $out
-
-          # Copy tangled files from dotfiles
-          cp ${tangledConfig}/*.el $out/ 2>/dev/null || true
-
-          # Add our custom-config.el loader
-          cp ${./custom-config.el} $out/custom-config.el
-        '';
-
-        # Build the container
+        # Build the container with local custom-config.el
         container = org-agenda-api.lib.${system}.mkContainer {
-          customElispFile = "${orgAgendaCustomConfig}/custom-config.el";
+          customElispFile = ./custom-config.el;
         };
       in
       {
@@ -55,6 +37,9 @@
             # Fly.io CLI
             pkgs.flyctl
 
+            # OpenTofu for infrastructure
+            pkgs.opentofu
+
             # Secrets management
             agenix.packages.${system}.default
             pkgs.age
@@ -63,6 +48,9 @@
             # Git
             pkgs.git
 
+            # Docker for container builds
+            pkgs.docker
+
             # For debugging/API interaction
             pkgs.jq
             pkgs.just
@@ -70,13 +58,22 @@
           ];
 
           shellHook = ''
+            # Decrypt secrets if they exist
+            if [ -f "./decrypt-secrets.sh" ]; then
+              source ./decrypt-secrets.sh 2>/dev/null || true
+            fi
+
             echo ""
-            echo "org-agenda-api Fly.io deployment shell"
+            echo "org-agenda-api deployment shell"
             echo ""
-            echo "Commands:"
-            echo "  just --list             - Show available API commands"
-            echo "  ./deploy.sh             - Deploy to Fly.io"
-            echo "  flyctl                  - Fly.io CLI"
+            echo "Quick start:"
+            echo "  ./setup.sh              - Interactive setup (if not done)"
+            echo "  tofu init && tofu apply - Deploy infrastructure"
+            echo "  ./deploy.sh             - Build and deploy container"
+            echo ""
+            echo "Other commands:"
+            echo "  just --list             - Show API test commands"
+            echo "  flyctl logs             - View deployment logs"
             echo "  agenix -e <file>        - Edit encrypted secrets"
             echo ""
           '';
