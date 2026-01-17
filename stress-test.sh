@@ -2,22 +2,31 @@
 # Stress test for org-agenda-api
 set -euo pipefail
 
-BASE_URL="${BASE_URL:-https://colonelpanic-org-agenda.fly.dev}"
-AUTH_USER="${AUTH_USER:-imalison}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load configuration if available
+if [[ -f "$SCRIPT_DIR/config.env" ]]; then
+    source "$SCRIPT_DIR/config.env"
+fi
+
+# Set defaults from config or fall back to generic defaults
+BASE_URL="${BASE_URL:-https://${FLY_APP_NAME:-your-app}.fly.dev}"
+AUTH_USER="${AUTH_USER:-testuser}"
 AUTH_PASSWORD="${AUTH_PASSWORD:-}"
 
-# Check for auth password
+# Check for auth password - try to decrypt if not set
 if [[ -z "$AUTH_PASSWORD" ]]; then
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$SCRIPT_DIR/secrets/auth-password.age" ]]; then
-    IDENTITY=""
-    for key_type in ed25519 rsa; do
-      if [[ -f "$HOME/.ssh/id_${key_type}" ]]; then
-        IDENTITY="$HOME/.ssh/id_${key_type}"
-        break
-      fi
-    done
-    if [[ -n "$IDENTITY" ]]; then
+    IDENTITY="${SSH_IDENTITY_FILE:-}"
+    if [[ -z "$IDENTITY" ]]; then
+      for key_type in ed25519 rsa; do
+        if [[ -f "$HOME/.ssh/id_${key_type}" ]]; then
+          IDENTITY="$HOME/.ssh/id_${key_type}"
+          break
+        fi
+      done
+    fi
+    if [[ -n "$IDENTITY" && -f "$IDENTITY" ]]; then
       AUTH_PASSWORD=$(age -d -i "$IDENTITY" "$SCRIPT_DIR/secrets/auth-password.age")
     fi
   fi
