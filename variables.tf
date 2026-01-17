@@ -8,7 +8,7 @@ variable "app_name" {
 variable "git_sync_repository" {
   description = "Git repository URL to sync (e.g., git@github.com:user/org-files.git)"
   type        = string
-  default     = "git@github.com:colonelpanic8/org.git"
+  default     = ""  # Set via TF_VAR_git_sync_repository or terraform.tfvars
 }
 
 variable "git_ssh_private_key" {
@@ -41,9 +41,9 @@ variable "region" {
 }
 
 variable "container_image" {
-  description = "Container image to deploy"
+  description = "Container image to deploy (built and pushed by deploy.sh)"
   type        = string
-  default     = "ghcr.io/colonelpanic8/org-agenda-api:latest"
+  default     = ""  # Set dynamically by deploy.sh
 }
 
 variable "vm_size" {
@@ -67,7 +67,7 @@ variable "git_sync_interval" {
 variable "git_user_email" {
   description = "Git user email for commits"
   type        = string
-  default     = "org-agenda-api@colonelpanic.io"
+  default     = "org-agenda-api@localhost"
 }
 
 variable "git_user_name" {
