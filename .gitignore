@@ -1,0 +1,18 @@
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!terraform.tfvars.example
+
+# Secrets (decrypted)
+*.pem
+*.key
+
+# Nix
+result
+result-*
+
+# direnv
+.direnv/
+

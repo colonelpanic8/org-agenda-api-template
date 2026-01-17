@@ -1,0 +1,19 @@
+# fly.toml - Fly.io deployment configuration
+# See https://fly.io/docs/reference/configuration/
+
+app = "colonelpanic-org-agenda"
+primary_region = "ord"
+
+# Image is built from flake and passed via deploy.sh --image flag
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
