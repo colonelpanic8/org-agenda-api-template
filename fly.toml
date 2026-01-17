@@ -1,7 +1,8 @@
 # fly.toml - Fly.io deployment configuration
 # See https://fly.io/docs/reference/configuration/
+# Note: setup.sh will update app and primary_region from your config
 
-app = "colonelpanic-org-agenda"
+app = "your-app-name"
 primary_region = "ord"
 
 # Image is built from flake and passed via deploy.sh --image flag
