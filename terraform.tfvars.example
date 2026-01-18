@@ -1,24 +1,12 @@
 # Copy this file to terraform.tfvars and fill in your values
+# Or run ./setup.sh for interactive configuration
 
-project_id          = "your-gcp-project-id"
-service_name        = "org-agenda-api"
-git_sync_repository = "git@github.com:yourusername/org-files.git"
-git_ssh_private_key = <<-EOT
------BEGIN OPENSSH PRIVATE KEY-----
-your-private-key-here
------END OPENSSH PRIVATE KEY-----
-EOT
-
-# HTTP Basic Auth
-auth_user     = "admin"
-auth_password = "your-secure-password"
+app_name = "your-org-agenda-app"
 
 # Optional overrides
-# region        = "us-central1"
-# cpu           = "1"
-# memory        = "512Mi"
-# min_instances = 0
-# max_instances = 1
+# region            = "ord"  # Fly.io region (default: ord/Chicago)
+# vm_size           = "shared-cpu-1x"
+# vm_memory         = 512
 # git_sync_interval = 60
 
 # Custom elisp (optional)
@@ -26,3 +14,7 @@ auth_password = "your-secure-password"
 #   (setq org-agenda-api-capture-templates
 #     '(("todo" :name "Todo" :template ("t" "Todo" entry (file "/data/org/inbox.org") "* TODO %^{Title}\n%U\n%?"))))
 # EOT
+
+# Note: Secrets (GIT_SYNC_REPOSITORY, GIT_SSH_PRIVATE_KEY, AUTH_USER,
+# AUTH_PASSWORD, etc.) are managed via agenix encryption and set using
+# flyctl secrets in deploy.sh. Do not add them here.

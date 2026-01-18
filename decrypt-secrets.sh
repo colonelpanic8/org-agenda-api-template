@@ -44,18 +44,13 @@ for secretFile in "$SCRIPT_DIR"/secrets/*.age; do
 
   filename=$(basename "$secretFile")
   decryptedFileName="${filename%.age}"
-  # Convert to TF_VAR format: git-ssh-key -> TF_VAR_git_ssh_key
-  envVarName="TF_VAR_$(echo "$decryptedFileName" | tr '-' '_')"
+  # Convert to env var: git-ssh-key -> GIT_SSH_KEY, auth-password -> AUTH_PASSWORD
+  envVarName="$(echo "$decryptedFileName" | tr '[:lower:]' '[:upper:]' | tr '-' '_')"
 
   content=$(age -d -i "$identity" "$secretFile" 2>/dev/null)
   if [[ $? -eq 0 ]]; then
     export "$envVarName"="$content"
     decrypted+=("$decryptedFileName")
-
-    # Also export AUTH_PASSWORD directly for justfile/scripts
-    if [[ "$decryptedFileName" == "auth-password" ]]; then
-      export AUTH_PASSWORD="$content"
-    fi
   else
     failed+=("$decryptedFileName")
   fi

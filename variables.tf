@@ -5,33 +5,6 @@ variable "app_name" {
   type        = string
 }
 
-variable "git_sync_repository" {
-  description = "Git repository URL to sync (e.g., git@github.com:user/org-files.git)"
-  type        = string
-  default     = ""  # Set via TF_VAR_git_sync_repository or terraform.tfvars
-}
-
-variable "git_ssh_private_key" {
-  description = "SSH private key for git repository access"
-  type        = string
-  sensitive   = true
-}
-
-# Authentication
-
-variable "auth_user" {
-  description = "Username for HTTP basic auth"
-  type        = string
-  default     = ""
-}
-
-variable "auth_password" {
-  description = "Password for HTTP basic auth"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 # Optional configuration
 
 variable "region" {
@@ -64,20 +37,12 @@ variable "git_sync_interval" {
   default     = 60
 }
 
-variable "git_user_email" {
-  description = "Git user email for commits"
-  type        = string
-  default     = "org-agenda-api@localhost"
-}
-
-variable "git_user_name" {
-  description = "Git user name for commits"
-  type        = string
-  default     = "org-agenda-api"
-}
-
 variable "custom_elisp" {
   description = "Custom elisp code to evaluate on startup (inline)"
   type        = string
   default     = ""
 }
+
+# Note: Secrets (GIT_SYNC_REPOSITORY, GIT_SSH_PRIVATE_KEY, AUTH_USER,
+# AUTH_PASSWORD, GIT_USER_EMAIL, GIT_USER_NAME) are managed via agenix
+# and set using flyctl secrets in deploy.sh. They are not Terraform variables.

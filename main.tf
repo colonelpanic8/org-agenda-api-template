@@ -22,21 +22,15 @@ resource "fly_machine" "org_agenda_api" {
 
   image = var.container_image
 
+  # Note: Secrets (GIT_SYNC_REPOSITORY, GIT_SSH_PRIVATE_KEY, AUTH_USER,
+  # AUTH_PASSWORD, GIT_USER_EMAIL, GIT_USER_NAME) are set via flyctl secrets
+  # in deploy.sh using agenix-encrypted values. Do not set them here to avoid
+  # storing secrets in Terraform state.
   env = merge(
     {
-      # Git sync configuration
-      GIT_SYNC_REPOSITORY = var.git_sync_repository
-      GIT_SSH_PRIVATE_KEY = var.git_ssh_private_key
-      GIT_SYNC_INTERVAL   = tostring(var.git_sync_interval)
-      GIT_SYNC_NEW_FILES  = "true"
-      GIT_USER_EMAIL      = var.git_user_email
-      GIT_USER_NAME       = var.git_user_name
+      GIT_SYNC_INTERVAL  = tostring(var.git_sync_interval)
+      GIT_SYNC_NEW_FILES = "true"
     },
-    # Auth configuration (only if provided)
-    var.auth_user != "" ? {
-      AUTH_USER     = var.auth_user
-      AUTH_PASSWORD = var.auth_password
-    } : {},
     # Custom elisp (only if provided)
     var.custom_elisp != "" ? {
       ORG_API_CUSTOM_ELISP_CONTENT = var.custom_elisp
