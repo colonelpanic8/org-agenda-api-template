@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -640,8 +637,111 @@ EOF
 }
 
 # =============================================================================
+# Remote bootstrap - handle running via curl
+# =============================================================================
+
+TEMPLATE_REPO="colonelpanic8/org-agenda-api-template"
+
+remote_bootstrap() {
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║       org-agenda-api Deployment Template Setup               ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "Setting up org-agenda-api from the template repository..."
+    echo ""
+
+    # Check for git
+    if ! command -v git &> /dev/null; then
+        print_error "git is required but not installed"
+        exit 1
+    fi
+
+    # Determine project directory
+    DEFAULT_DIR="$HOME/org-agenda-api"
+    read -p "Where should we create your project? [$DEFAULT_DIR]: " PROJECT_DIR
+    PROJECT_DIR=${PROJECT_DIR:-$DEFAULT_DIR}
+
+    # Expand ~ if present
+    PROJECT_DIR="${PROJECT_DIR/#\~/$HOME}"
+
+    if [[ -d "$PROJECT_DIR" ]]; then
+        print_error "Directory already exists: $PROJECT_DIR"
+        echo "Please choose a different location or remove the existing directory."
+        exit 1
+    fi
+
+    # Check for gh CLI and offer to fork
+    if command -v gh &> /dev/null; then
+        echo ""
+        echo "GitHub CLI (gh) detected!"
+        echo ""
+        echo "Options:"
+        echo "  1) Fork the template to your GitHub account (recommended)"
+        echo "     Creates your own copy you can customize and push to"
+        echo ""
+        echo "  2) Just clone the template"
+        echo "     You can set up your own remote later"
+        echo ""
+        read -p "Choice [1]: " FORK_CHOICE
+        FORK_CHOICE=${FORK_CHOICE:-1}
+
+        if [[ "$FORK_CHOICE" == "1" ]]; then
+            print_step "Forking repository..."
+
+            # Fork and clone in one step
+            if gh repo fork "$TEMPLATE_REPO" --clone --remote -- "$PROJECT_DIR" 2>/dev/null; then
+                print_success "Forked and cloned to $PROJECT_DIR"
+            else
+                # Fork might already exist, try to clone user's fork
+                GH_USER=$(gh api user --jq '.login' 2>/dev/null)
+                if [[ -n "$GH_USER" ]]; then
+                    echo "Attempting to clone existing fork..."
+                    if gh repo clone "$GH_USER/org-agenda-api-template" "$PROJECT_DIR" 2>/dev/null; then
+                        print_success "Cloned existing fork to $PROJECT_DIR"
+                    else
+                        print_error "Could not fork or clone. Falling back to simple clone."
+                        git clone "https://github.com/$TEMPLATE_REPO.git" "$PROJECT_DIR"
+                    fi
+                else
+                    print_error "Could not fork. Falling back to simple clone."
+                    git clone "https://github.com/$TEMPLATE_REPO.git" "$PROJECT_DIR"
+                fi
+            fi
+        else
+            print_step "Cloning repository..."
+            git clone "https://github.com/$TEMPLATE_REPO.git" "$PROJECT_DIR"
+            print_success "Cloned to $PROJECT_DIR"
+        fi
+    else
+        # No gh, just clone
+        print_step "Cloning repository..."
+        git clone "https://github.com/$TEMPLATE_REPO.git" "$PROJECT_DIR"
+        print_success "Cloned to $PROJECT_DIR"
+        echo ""
+        echo -e "${YELLOW}Tip: Install GitHub CLI (gh) to easily fork and push changes.${NC}"
+    fi
+
+    echo ""
+    print_step "Continuing setup in $PROJECT_DIR..."
+    echo ""
+
+    cd "$PROJECT_DIR"
+    exec bash ./setup.sh
+}
+
+# =============================================================================
 # Main entry point
 # =============================================================================
+
+# Check if running via curl/pipe (BASH_SOURCE will be empty or "bash")
+if [[ -z "${BASH_SOURCE[0]:-}" ]] || [[ "${BASH_SOURCE[0]}" == "bash" ]] || [[ ! -f "${BASH_SOURCE[0]:-}" ]]; then
+    # Running via pipe (curl | bash), need to clone first
+    remote_bootstrap
+    exit 0
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Check if we're inside nix develop shell
 if [[ -n "${IN_NIX_SHELL:-}" ]] || [[ -n "${IN_ORG_AGENDA_SETUP:-}" ]]; then

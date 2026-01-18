@@ -2,61 +2,49 @@
 
 Deploy your org-mode agenda as a secure REST API on [Fly.io](https://fly.io).
 
+## Quick Start
+
+Run this command to get started:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/colonelpanic8/org-agenda-api-template/master/setup.sh)
+```
+
+The interactive setup wizard will:
+- Install Nix and direnv if needed
+- Fork or clone this template (with GitHub CLI, or plain git)
+- Walk you through all configuration
+- Set up encrypted secrets
+- Prepare everything for deployment
+
+## What You'll Need
+
+Before running setup, make sure you have:
+
+1. **A Fly.io account** - Sign up at [fly.io](https://fly.io) (free tier available, credit card required)
+2. **A git repository with your .org files** - Private GitHub/GitLab repo or any SSH-accessible git server
+
+The setup wizard handles everything else, including installing Nix if you don't have it.
+
+## What This Template Provides
+
 This template sets up [org-agenda-api](https://github.com/colonelpanic8/org-agenda-api) with:
 - Encrypted secrets management (agenix)
 - Automatic git sync of your org files
 - HTTP Basic Auth protection
 - Infrastructure as code (OpenTofu/Terraform)
 
-## Prerequisites
+## Manual Setup
 
-### 1. Nix (required)
-
-Install using the Determinate Systems installer (recommended):
+If you prefer to clone manually:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
-
-Or see [nixos.org/download](https://nixos.org/download.html) for other options.
-
-### 2. direnv (recommended)
-
-Automatically loads the development environment when you enter the directory.
-
-```bash
-# Install
-nix profile install nixpkgs#direnv
-
-# Add to your shell (~/.bashrc, ~/.zshrc, etc.)
-eval "$(direnv hook bash)"  # or zsh, fish, etc.
-```
-
-See [direnv.net/docs/hook](https://direnv.net/docs/hook.html) for all shells.
-
-### 3. Fly.io Account
-
-1. Sign up at [fly.io/app/sign-up](https://fly.io/app/sign-up)
-2. Credit card required (generous free tier available)
-3. You'll authenticate later with `flyctl auth login`
-
-### 4. Git Repository for Your Org Files
-
-You need a git repository containing your `.org` files. This can be:
-- A private GitHub/GitLab repo
-- Any git server accessible via SSH
-
-The deployed container will sync this repository to serve your agenda.
-
-## Quick Start
-
-### Option A: Interactive Setup (Recommended)
-
-```bash
+git clone https://github.com/colonelpanic8/org-agenda-api-template.git
+cd org-agenda-api-template
 ./setup.sh
 ```
 
-This will:
+The setup wizard will:
 - Check prerequisites and help install missing ones
 - Generate a secure password (or let you choose one)
 - Generate a dedicated SSH deploy key
